@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mnémosyne</title>
+<meta name="theme-color" content="#0f0f0f">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Mnémosyne">
+<style>
+:root{--bg:#0f0f0f;--bg2:#181818;--bg3:#222;--border:rgba(255,255,255,0.08);--border2:rgba(255,255,255,0.15);--text:#f0ede8;--text2:#8a8680;--text3:#555250;--accent:#c8b89a;--accent2:#e8d5b5;--r:10px;--rl:14px}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--bg);color:var(--text);font-family:Georgia,serif;font-size:15px;min-height:100vh}
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:4px}
+.sidebar{position:fixed;top:0;left:0;width:220px;height:100vh;background:var(--bg2);border-right:.5px solid var(--border);display:flex;flex-direction:column;padding:1.5rem 0;z-index:10}
+.logo{font-size:18px;color:var(--accent2);padding:0 1.25rem 1.5rem;border-bottom:.5px solid var(--border);letter-spacing:.01em}
+.logo span{color:var(--text2);font-size:12px;font-family:system-ui,sans-serif;display:block;margin-top:2px;font-weight:300}
+.nav{padding:1rem 0;flex:1}
+.nav-item{display:flex;align-items:center;gap:10px;padding:8px 1.25rem;font-size:13px;font-family:system-ui,sans-serif;color:var(--text2);cursor:pointer;transition:all .15s;border-left:2px solid transparent}
+.nav-item:hover{color:var(--text);background:var(--bg3)}
+.nav-item.active{color:var(--accent2);border-left-color:var(--accent);background:rgba(200,184,154,.06)}
+.nav-icon{font-size:15px;width:18px;text-align:center}
+.nav-section{font-size:10px;color:var(--text3);padding:1rem 1.25rem .4rem;letter-spacing:.08em;text-transform:uppercase;font-family:system-ui,sans-serif}
+.sidebar-bottom{padding:1.25rem;border-top:.5px solid var(--border);margin-top:auto}
+.main{margin-left:220px;padding:2rem 2.5rem;min-height:100vh}
+.page-header{margin-bottom:2rem}
+.page-header h1{font-size:28px;font-weight:400;letter-spacing:-.01em;color:var(--accent2)}
+.page-header p{font-size:13px;color:var(--text2);margin-top:4px;font-family:system-ui,sans-serif}
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:2rem}
+.stat{background:var(--bg2);border:.5px solid var(--border);border-radius:var(--r);padding:1rem 1.25rem}
+.stat-label{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;font-family:system-ui,sans-serif}
+.stat-value{font-size:26px;color:var(--accent2)}
+.toolbar{display:flex;gap:10px;margin-bottom:1.5rem;align-items:center}
+.search-wrap{flex:1;position:relative}
+.search-wrap input{width:100%;background:var(--bg2);border:.5px solid var(--border);border-radius:var(--r);padding:9px 14px 9px 36px;font-size:13px;color:var(--text);font-family:system-ui,sans-serif;outline:none}
+.search-wrap input::placeholder{color:var(--text3)}
+.search-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--text3);font-size:13px;pointer-events:none}
+select{background:var(--bg2);border:.5px solid var(--border);border-radius:var(--r);padding:9px 12px;font-size:13px;color:var(--text2);font-family:system-ui,sans-serif;outline:none;cursor:pointer}
+.btn-new{background:var(--accent);border:none;border-radius:var(--r);padding:9px 18px;font-size:13px;color:#0f0f0f;font-family:system-ui,sans-serif;font-weight:500;cursor:pointer;white-space:nowrap}
+.btn-new:hover{opacity:.85}
+.cards-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px}
+.card{background:var(--bg2);border:.5px solid var(--border);border-radius:var(--rl);padding:1.25rem;cursor:pointer;transition:border-color .15s,transform .15s;display:flex;flex-direction:column;gap:10px}
+.card:hover{border-color:var(--border2);transform:translateY(-1px)}
+.card-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+.card-title{font-size:15px;font-weight:500;line-height:1.35;font-family:system-ui,sans-serif}
+.tag{font-size:10px;padding:3px 9px;border-radius:20px;white-space:nowrap;font-weight:500;font-family:system-ui,sans-serif;flex-shrink:0}
+.t-ia{background:#2a2240;color:#a99de0}.t-auto{background:#0e2a1e;color:#5ecfa0}.t-prod{background:#2a1e0a;color:#d4a04a}.t-dev{background:#0a1e2e;color:#4a9fd4}.t-strat{background:#2a0e0a;color:#d46a4a}.t-autre{background:#2a2240;color:#a99de0}
+.card-summary{font-size:12px;color:var(--text2);line-height:1.6;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;font-family:system-ui,sans-serif}
+.card-footer{display:flex;align-items:center;justify-content:space-between;margin-top:auto;padding-top:8px;border-top:.5px solid var(--border)}
+.card-date,.card-pts{font-size:11px;color:var(--text3);font-family:system-ui,sans-serif}
+.empty{text-align:center;padding:4rem 2rem;color:var(--text3);font-size:14px;font-family:system-ui,sans-serif}
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:200;align-items:center;justify-content:center;padding:1rem}
+.modal-bg.open{display:flex}
+.modal{background:var(--bg2);border:.5px solid var(--border2);border-radius:var(--rl);padding:1.75rem;width:100%;max-width:560px;max-height:90vh;overflow-y:auto}
+.modal h2{font-size:20px;font-weight:400;margin-bottom:1.25rem;color:var(--accent2)}
+.field-label{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px;margin-top:14px;display:block;font-family:system-ui,sans-serif}
+.modal input,.modal textarea,.modal select{width:100%;background:var(--bg3);border:.5px solid var(--border);border-radius:var(--r);padding:9px 12px;font-size:13px;color:var(--text);font-family:system-ui,sans-serif;outline:none;resize:vertical}
+.modal textarea{min-height:90px}
+.modal-btns{display:flex;gap:8px;margin-top:1.5rem;justify-content:flex-end}
+.btn-ghost{padding:8px 16px;font-size:13px;background:none;border:.5px solid var(--border2);border-radius:var(--r);color:var(--text2);cursor:pointer;font-family:system-ui,sans-serif}
+.btn-ghost:hover{background:var(--bg3)}
+.btn-danger{border-color:rgba(200,80,80,.4);color:#c05050}
+.btn-danger:hover{background:rgba(200,80,80,.1)}
+.btn-primary{padding:8px 20px;font-size:13px;background:var(--accent);border:none;border-radius:var(--r);color:#0f0f0f;font-family:system-ui,sans-serif;font-weight:500;cursor:pointer}
+.btn-primary:hover{opacity:.85}
+.loading-row{display:none;align-items:center;gap:10px;font-size:12px;color:var(--text2);margin-top:10px;padding:10px 12px;background:var(--bg3);border-radius:var(--r);font-family:system-ui,sans-serif}
+.loading-row.show{display:flex}
+.spinner{width:14px;height:14px;flex-shrink:0;border:1.5px solid var(--border2);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.detail-section{margin-top:16px}
+.detail-section-title{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;font-family:system-ui,sans-serif}
+.detail-text{font-size:14px;color:var(--text2);line-height:1.7;font-family:system-ui,sans-serif}
+.retenir-list{list-style:none}
+.retenir-list li{font-size:13px;color:var(--text);padding:8px 0;border-bottom:.5px solid var(--border);display:flex;gap:10px;line-height:1.5;font-family:system-ui,sans-serif}
+.retenir-list li:last-child{border-bottom:none}
+.retenir-list li::before{content:"—";color:var(--accent);flex-shrink:0}
+.note-area{width:100%;min-height:80px;background:var(--bg3);border:.5px solid var(--border);border-radius:var(--r);padding:10px 12px;font-size:13px;color:var(--text);font-family:system-ui,sans-serif;resize:vertical;outline:none}
+.note-area::placeholder{color:var(--text3)}
+.stats-page{display:none}
+.chart-section{background:var(--bg2);border:.5px solid var(--border);border-radius:var(--rl);padding:1.5rem;margin-bottom:1.25rem}
+.chart-section h3{font-size:13px;font-weight:500;color:var(--text2);margin-bottom:1.25rem;text-transform:uppercase;letter-spacing:.05em;font-family:system-ui,sans-serif}
+.bar-row{display:flex;align-items:center;gap:12px;margin-bottom:10px}
+.bar-label{font-size:12px;color:var(--text2);min-width:110px;text-align:right;font-family:system-ui,sans-serif}
+.bar-track{flex:1;background:var(--bg3);border-radius:3px;height:6px;overflow:hidden}
+.bar-fill{height:100%;border-radius:3px;transition:width .5s}
+.bar-count{font-size:12px;color:var(--text3);min-width:20px;font-family:system-ui,sans-serif}
+.apikey-status{font-size:11px;margin-top:6px;display:block;font-family:system-ui,sans-serif}
+@media(max-width:700px){.sidebar{width:60px}.logo,.nav-section,.nav-item span,.sidebar-bottom span{display:none}.nav-item{justify-content:center;padding:10px}.main{margin-left:60px;padding:1.25rem}.stats-row{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+
+<div class="sidebar">
+  <div class="logo">Mnémosyne<span>Base de connaissances</span></div>
+  <nav class="nav">
+    <div class="nav-section">Navigation</div>
+    <div class="nav-item active" id="nav-fiches" onclick="showPage('fiches')"><span class="nav-icon">◈</span><span>Mes fiches</span></div>
+    <div class="nav-item" id="nav-stats" onclick="showPage('stats')"><span class="nav-icon">◎</span><span>Statistiques</span></div>
+  </nav>
+  <div class="sidebar-bottom">
+    <div class="nav-item" style="padding:8px 0;border-left:none" onclick="openApiModal()"><span class="nav-icon">⚙</span><span>Clé API</span></div>
+    <span class="apikey-status" id="apikey-status"></span>
+  </div>
+</div>
+
+<main class="main">
+  <div id="page-fiches">
+    <div class="page-header"><h1>Mes fiches</h1><p>Toutes tes connaissances extraites de conversations</p></div>
+    <div class="stats-row" id="stats-row"></div>
+    <div class="toolbar">
+      <div class="search-wrap"><span class="search-icon">⌕</span><input type="text" id="search" placeholder="Rechercher..." oninput="renderCards()"></div>
+      <select id="filter-cat" onchange="renderCards()"><option value="">Tous les thèmes</option></select>
+      <button class="btn-new" onclick="openNew()">+ Nouvelle fiche</button>
+    </div>
+    <div class="cards-grid" id="cards-grid"></div>
+  </div>
+  <div id="page-stats" class="stats-page">
+    <div class="page-header"><h1>Statistiques</h1><p>Vue d'ensemble de ta base de connaissances</p></div>
+    <div class="chart-section"><h3>Fiches par thème</h3><div id="chart-cats"></div></div>
+    <div class="chart-section"><h3>Activité</h3><div id="chart-dates"></div></div>
+  </div>
+</main>
+
+<div class="modal-bg" id="new-modal">
+  <div class="modal">
+    <h2>Nouvelle fiche</h2>
+    <span class="field-label">Colle ta conversation</span>
+    <textarea id="conv-input" placeholder="Colle ici le texte de ta conversation Claude..." style="min-height:130px;"></textarea>
+    <div class="loading-row" id="loading-row"><div class="spinner"></div><span>Analyse en cours...</span></div>
+    <div id="gen-fields" style="display:none;">
+      <span class="field-label">Titre</span><input type="text" id="fiche-title">
+      <span class="field-label">Catégorie</span>
+      <select id="fiche-cat"><option>IA & Outils</option><option>Automatisation</option><option>Productivité</option><option>Développement</option><option>Stratégie</option><option>Autre</option></select>
+      <span class="field-label">Résumé</span><textarea id="fiche-resume"></textarea>
+      <span class="field-label">Points à retenir (un par ligne)</span><textarea id="fiche-retenir" style="min-height:100px;"></textarea>
+    </div>
+    <div class="modal-btns">
+      <button class="btn-ghost" onclick="closeModal('new-modal')">Annuler</button>
+      <button class="btn-ghost" id="btn-analyze" onclick="analyzeConv()">Analyser avec Claude ↗</button>
+      <button class="btn-primary" id="btn-save" style="display:none;" onclick="saveFiche()">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="detail-modal">
+  <div class="modal">
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:8px;">
+      <h2 id="detail-title" style="font-size:22px;line-height:1.2;"></h2>
+      <button class="btn-ghost" onclick="closeModal('detail-modal')" style="flex-shrink:0;padding:6px 10px;">✕</button>
+    </div>
+    <span id="detail-tag" class="tag"></span>
+    <div class="detail-section"><div class="detail-section-title">Résumé</div><p class="detail-text" id="detail-resume"></p></div>
+    <div class="detail-section"><div class="detail-section-title">À retenir</div><ul class="retenir-list" id="detail-retenir"></ul></div>
+    <div class="detail-section"><div class="detail-section-title">Mes annotations</div><textarea class="note-area" id="detail-note" placeholder="Ajoute tes notes ici..." oninput="saveNote(this)"></textarea></div>
+    <div class="modal-btns">
+      <button class="btn-ghost btn-danger" onclick="deleteCard()">Supprimer</button>
+      <button class="btn-primary" onclick="closeModal('detail-modal')">Fermer</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="api-modal">
+  <div class="modal" style="max-width:460px;">
+    <h2>Clé API Anthropic</h2>
+    <p style="font-size:13px;color:var(--text2);line-height:1.6;margin-bottom:1rem;font-family:system-ui,sans-serif;">Nécessaire pour analyser tes conversations. Sauvegardée uniquement sur ton ordi.</p>
+    <span class="field-label">Ta clé API</span>
+    <input type="password" id="api-key-input" placeholder="sk-ant-api03-...">
+    <p style="font-size:11px;color:var(--text3);margin-top:8px;font-family:system-ui,sans-serif;">Trouve-la sur <span style="color:var(--accent);">console.anthropic.com</span> → API Keys</p>
+    <div class="modal-btns">
+      <button class="btn-ghost" onclick="closeModal('api-modal')">Fermer</button>
+      <button class="btn-primary" onclick="saveApiKey()">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<script>
+var TAG={'IA & Outils':'t-ia','Automatisation':'t-auto','Productivité':'t-prod','Développement':'t-dev','Stratégie':'t-strat','Autre':'t-autre'};
+var BAR={'IA & Outils':'#7b6fd4','Automatisation':'#3db88a','Productivité':'#d4a04a','Développement':'#4a9fd4','Stratégie':'#d46a4a','Autre':'#8a8680'};
+var fiches=JSON.parse(localStorage.getItem('mnemo_fiches')||'[]');
+var currentId=null;
+
+if(!fiches.length){
+  fiches=[
+    {id:1,title:'OpenClaw & automatisation IA',cat:'IA & Outils',resume:"OpenClaw est un agent IA open source basé sur Claude Code permettant d'automatiser des tâches complexes en autonomie, avec mémoire persistante.",retenir:["OpenClaw = surcouche de Claude Code avec mémoire persistante","Compatible Claude, GPT-4o, Gemini, modèles locaux","Plan Pro Claude requis (20€/mois) pour Claude Code","Automatisation possible de scraping et prospection h24"],date:'15 mars 2026',note:''},
+    {id:2,title:'Plans Claude & app desktop',cat:'Productivité',resume:"Claude propose un plan gratuit et un plan Pro à 20€/mois qui débloque Claude Code et Cowork. App desktop officielle disponible gratuitement.",retenir:["App desktop Claude : Mac, Windows, iOS, Android","Plan Pro = 20€/mois, inclut Claude Code + Cowork","Plan gratuit suffisant pour conversations classiques","5x plus de messages en Pro vs gratuit"],date:'15 mars 2026',note:''}
+  ];
+  save();
+}
+
+function save(){localStorage.setItem('mnemo_fiches',JSON.stringify(fiches));}
+function getKey(){return localStorage.getItem('mnemo_api_key')||'';}
+
+function showPage(p){
+  document.getElementById('page-fiches').style.display=p==='fiches'?'':'none';
+  document.getElementById('page-stats').style.display=p==='stats'?'':'none';
+  document.getElementById('nav-fiches').className='nav-item'+(p==='fiches'?' active':'');
+  document.getElementById('nav-stats').className='nav-item'+(p==='stats'?' active':'');
+  if(p==='stats')renderStats();
+}
+
+function updateStats(){
+  var cats=[];
+  fiches.forEach(function(f){if(cats.indexOf(f.cat)<0)cats.push(f.cat);});
+  document.getElementById('stats-row').innerHTML=
+    '<div class="stat"><div class="stat-label">Total fiches</div><div class="stat-value">'+fiches.length+'</div></div>'+
+    '<div class="stat"><div class="stat-label">Thèmes</div><div class="stat-value">'+cats.length+'</div></div>'+
+    '<div class="stat"><div class="stat-label">Avec notes</div><div class="stat-value">'+fiches.filter(function(f){return f.note&&f.note.trim();}).length+'</div></div>'+
+    '<div class="stat"><div class="stat-label">Ce mois</div><div class="stat-value">'+fiches.length+'</div></div>';
+}
+
+function updateCatFilter(){
+  var sel=document.getElementById('filter-cat');
+  var cats=[];
+  fiches.forEach(function(f){if(cats.indexOf(f.cat)<0)cats.push(f.cat);});
+  var cur=sel.value;
+  sel.innerHTML='<option value="">Tous les thèmes</option>'+cats.map(function(c){return '<option value="'+c+'"'+(c===cur?' selected':'')+'>'+c+'</option>';}).join('');
+}
+
+function renderCards(){
+  var q=(document.getElementById('search').value||'').toLowerCase();
+  var cat=document.getElementById('filter-cat').value;
+  var list=fiches.filter(function(f){
+    var text=(f.title+f.resume+f.retenir.join(' ')).toLowerCase();
+    return(!q||text.indexOf(q)>=0)&&(!cat||f.cat===cat);
+  });
+  var grid=document.getElementById('cards-grid');
+  if(!list.length){grid.innerHTML='<div class="empty">Aucune fiche trouvée</div>';return;}
+  grid.innerHTML=list.map(function(f){
+    return '<div class="card" onclick="openDetail('+f.id+')">'+
+      '<div class="card-top"><div class="card-title">'+f.title+'</div><span class="tag '+(TAG[f.cat]||'t-ia')+'">'+f.cat+'</span></div>'+
+      '<div class="card-summary">'+f.resume+'</div>'+
+      '<div class="card-footer"><span class="card-date">'+f.date+'</span><span class="card-pts">'+f.retenir.length+' points</span></div>'+
+      '</div>';
+  }).join('');
+}
+
+function renderStats(){
+  var cats={};
+  fiches.forEach(function(f){cats[f.cat]=(cats[f.cat]||0)+1;});
+  var keys=Object.keys(cats);
+  var maxC=1;keys.forEach(function(k){if(cats[k]>maxC)maxC=cats[k];});
+  document.getElementById('chart-cats').innerHTML=keys.sort(function(a,b){return cats[b]-cats[a];}).map(function(c){
+    return '<div class="bar-row"><div class="bar-label">'+c+'</div><div class="bar-track"><div class="bar-fill" style="width:'+Math.round(cats[c]/maxC*100)+'%;background:'+(BAR[c]||'#888')+'"></div></div><div class="bar-count">'+cats[c]+'</div></div>';
+  }).join('')||'<p style="font-size:13px;color:var(--text3);font-family:system-ui">Aucune fiche.</p>';
+  var dates={};
+  fiches.forEach(function(f){dates[f.date]=(dates[f.date]||0)+1;});
+  var dkeys=Object.keys(dates);
+  var maxD=1;dkeys.forEach(function(k){if(dates[k]>maxD)maxD=dates[k];});
+  document.getElementById('chart-dates').innerHTML=dkeys.map(function(d){
+    return '<div class="bar-row"><div class="bar-label">'+d+'</div><div class="bar-track"><div class="bar-fill" style="width:'+Math.round(dates[d]/maxD*100)+'%;background:var(--accent)"></div></div><div class="bar-count">'+dates[d]+'</div></div>';
+  }).join('')||'<p style="font-size:13px;color:var(--text3);font-family:system-ui">Aucune fiche.</p>';
+}
+
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+
+function openNew(){
+  document.getElementById('conv-input').value='';
+  document.getElementById('gen-fields').style.display='none';
+  document.getElementById('btn-save').style.display='none';
+  document.getElementById('btn-analyze').style.display='';
+  document.getElementById('btn-analyze').disabled=false;
+  document.getElementById('loading-row').classList.remove('show');
+  document.getElementById('new-modal').classList.add('open');
+}
+
+function analyzeConv(){
+  var text=document.getElementById('conv-input').value.trim();
+  if(!text){alert('Colle une conversation d\'abord.');return;}
+  var key=getKey();
+  if(!key){openApiModal();return;}
+  var btn=document.getElementById('btn-analyze');
+  btn.disabled=true;
+  document.getElementById('loading-row').classList.add('show');
+  fetch('https://api.anthropic.com/v1/messages',{
+    method:'POST',
+    headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+    body:JSON.stringify({
+      model:'claude-sonnet-4-20250514',
+      max_tokens:1000,
+      messages:[{role:'user',content:'Analyse cette conversation et génère une fiche. Réponds UNIQUEMENT en JSON valide sans markdown ni backticks :\n{"title":"titre court max 8 mots","cat":"une parmi: IA & Outils, Automatisation, Productivité, Développement, Stratégie, Autre","resume":"résumé 2-3 phrases","retenir":["point 1","point 2","point 3","point 4"]}\n\nConversation:\n'+text.slice(0,3500)}]
+    })
+  }).then(function(r){return r.json();}).then(function(data){
+    var raw=data.content.map(function(i){return i.text||'';}).join('');
+    var parsed=JSON.parse(raw.replace(/```json|```/g,'').trim());
+    document.getElementById('fiche-title').value=parsed.title||'';
+    var sel=document.getElementById('fiche-cat');
+    for(var i=0;i<sel.options.length;i++)if(sel.options[i].value===parsed.cat){sel.value=parsed.cat;break;}
+    document.getElementById('fiche-resume').value=parsed.resume||'';
+    document.getElementById('fiche-retenir').value=(parsed.retenir||[]).join('\n');
+    document.getElementById('gen-fields').style.display='';
+    document.getElementById('btn-save').style.display='';
+    document.getElementById('btn-analyze').style.display='none';
+    document.getElementById('loading-row').classList.remove('show');
+  }).catch(function(){
+    alert('Erreur d\'analyse. Vérifie ta clé API et réessaie.');
+    btn.disabled=false;
+    document.getElementById('loading-row').classList.remove('show');
+  });
+}
+
+function saveFiche(){
+  var title=document.getElementById('fiche-title').value.trim();
+  if(!title){alert('Titre requis.');return;}
+  var now=new Date();
+  var date=now.toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'});
+  fiches.unshift({id:Date.now(),title:title,cat:document.getElementById('fiche-cat').value,resume:document.getElementById('fiche-resume').value,retenir:document.getElementById('fiche-retenir').value.split('\n').filter(function(l){return l.trim();}),date:date,note:''});
+  save();closeModal('new-modal');updateStats();updateCatFilter();renderCards();
+}
+
+function openDetail(id){
+  var f=null;
+  for(var i=0;i<fiches.length;i++)if(fiches[i].id===id){f=fiches[i];break;}
+  if(!f)return;
+  currentId=id;
+  document.getElementById('detail-title').textContent=f.title;
+  var tag=document.getElementById('detail-tag');
+  tag.textContent=f.cat;tag.className='tag '+(TAG[f.cat]||'t-ia');
+  document.getElementById('detail-resume').textContent=f.resume;
+  document.getElementById('detail-retenir').innerHTML=f.retenir.map(function(r){return '<li>'+r+'</li>';}).join('');
+  document.getElementById('detail-note').value=f.note||'';
+  document.getElementById('detail-modal').classList.add('open');
+}
+
+function saveNote(el){
+  for(var i=0;i<fiches.length;i++)if(fiches[i].id===currentId){fiches[i].note=el.value;break;}
+  save();updateStats();
+}
+
+function deleteCard(){
+  if(!confirm('Supprimer cette fiche ?'))return;
+  fiches=fiches.filter(function(f){return f.id!==currentId;});
+  save();closeModal('detail-modal');updateStats();updateCatFilter();renderCards();
+}
+
+function openApiModal(){
+  document.getElementById('api-key-input').value=getKey();
+  document.getElementById('api-modal').classList.add('open');
+}
+
+function saveApiKey(){
+  var k=document.getElementById('api-key-input').value.trim();
+  if(!k){alert('Colle ta clé API.');return;}
+  localStorage.setItem('mnemo_api_key',k);
+  closeModal('api-modal');
+  updateApiStatus();
+}
+
+function updateApiStatus(){
+  var el=document.getElementById('apikey-status');
+  if(getKey()){el.textContent='◉ Clé configurée';el.style.color='#5ecfa0';}
+  else{el.textContent='◎ Clé manquante';el.style.color='#d46a4a';}
+}
+
+updateStats();updateCatFilter();renderCards();updateApiStatus();
+if(!getKey())openApiModal();
+</script>
+</body>
+</html>
